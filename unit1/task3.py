@@ -25,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s",
     handlers=[
-        logging.FileHandler("{}.log".format(os.path.abspath('__file__'))),
+        logging.FileHandler("{}.log".format(os.path.abspath(__file__))),
         logging.StreamHandler()
     ])
 
