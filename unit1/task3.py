@@ -134,5 +134,5 @@ if __name__ == '__main__':
             print(e)
 
     collection = gb_parser.mongo_collection
-    assert collection.count() == len(urls_todo)
+    assert collection.count_documents() == len(urls_todo)
     logger.info("All posts parsed successfully")
