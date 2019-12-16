@@ -12,13 +12,25 @@
 Обход делаем с помощью BS4 + Requests
 
 """
-
+import sys, os
 import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
 from datetime import datetime
 import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s",
+    handlers=[
+        logging.FileHandler("{}.log".format(os.path.abspath('__file__'))),
+        logging.StreamHandler()
+    ])
+
+
+logger = logging.getLogger()
 
 
 class GeekBlogParser(object):
@@ -64,7 +76,7 @@ class GeekBlogParser(object):
         pages_count = int(paginator.contents[-2].contents[0].text)
         links = set()
         for i in range(1, pages_count + 1):
-            logging.info("Getting articles from page {} of {}".format(i, pages_count))
+            logger.info("Getting articles from page {} of {}".format(i, pages_count))
             url = self.start_url + '?page={}'.format(i)
             links.update(list(self.get_articles_list(self.get_page_content(url))))
         return links
@@ -75,7 +87,7 @@ class GeekBlogParser(object):
         db = mongo_client['gb_scrap']
         mongo_collection = db['gb_posts']
         mongo_collection.delete_many({})
-        logging.info("Mongodb connected. Collection gb_scrap.gb_posts chosen")
+        logger.info("Mongodb connected. Collection gb_scrap.gb_posts chosen")
         return mongo_collection
 
     def add_to_mongo(self, title, url, date, author):
@@ -94,7 +106,7 @@ class GeekBlogParser(object):
         })
 
     def parse_article(self, url):
-        logging.info("Get info for article at: {}".format(url))
+        logger.info("Get info for article at: {}".format(url))
         html = self.get_page_content(url)
         soup = BeautifulSoup(html, features="lxml")
         title = soup.find('h1', {'class': 'blogpost-title'}).text
@@ -123,4 +135,4 @@ if __name__ == '__main__':
 
     collection = gb_parser.mongo_collection
     assert collection.count() == len(urls_todo)
-    logging.info("All posts parsed successfully")
+    logger.info("All posts parsed successfully")
