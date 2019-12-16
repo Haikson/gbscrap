@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
 from datetime import datetime
+import logging
 
 
 class GeekBlogParser(object):
@@ -51,18 +52,19 @@ class GeekBlogParser(object):
         @type html_content: str
         @return:
         """
-        soup = BeautifulSoup(html_content)
+        soup = BeautifulSoup(html_content, features="lxml")
         links = set()
         for link in soup.findAll('a', {'class': 'post-item__title'}):
             links.add(self.norm_link(link['href']))
         return links
 
     def get_all_articles_list_pages(self):
-        soup = BeautifulSoup(self.get_page_content(self.start_url))
+        soup = BeautifulSoup(self.get_page_content(self.start_url), features="lxml")
         paginator = soup.find('ul', {'class': 'gb__pagination'})
         pages_count = int(paginator.contents[-2].contents[0].text)
         links = set()
         for i in range(1, pages_count + 1):
+            logging.info("Getting articles from page {} of {}".format(i, pages_count))
             url = self.start_url + '?page={}'.format(i)
             links.update(list(self.get_articles_list(self.get_page_content(url))))
         return links
@@ -73,6 +75,7 @@ class GeekBlogParser(object):
         db = mongo_client['gb_scrap']
         mongo_collection = db['gb_posts']
         mongo_collection.delete_many({})
+        logging.info("Mongodb connected. Collection gb_scrap.gb_posts chosen")
         return mongo_collection
 
     def add_to_mongo(self, title, url, date, author):
@@ -91,8 +94,9 @@ class GeekBlogParser(object):
         })
 
     def parse_article(self, url):
+        logging.info("Get info for article at: {}".format(url))
         html = self.get_page_content(url)
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, features="lxml")
         title = soup.find('h1', {'class': 'blogpost-title'}).text
         date = datetime.strptime(
             soup.find('time')['datetime'].split("T")[0],
@@ -110,15 +114,13 @@ class GeekBlogParser(object):
 if __name__ == '__main__':
 
     gb_parser = GeekBlogParser()
-
-    collection = gb_parser.mongo_collection
-
     urls_todo = gb_parser.get_all_articles_list_pages()
-
     for url in urls_todo:
         try:
             gb_parser.add_to_mongo(**gb_parser.parse_article(url))
         except Exception as e:
             print(e)
 
+    collection = gb_parser.mongo_collection
     assert collection.count() == len(urls_todo)
+    logging.info("All posts parsed successfully")
