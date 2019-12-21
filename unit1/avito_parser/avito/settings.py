@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Scrapy settings for avito_rielt project
+# Scrapy settings for avito_parser project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -9,18 +9,20 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'avito_rielt'
+BOT_NAME = 'avito_parser'
 
-SPIDER_MODULES = ['avito_rielt.spiders']
-NEWSPIDER_MODULE = 'avito_rielt.spiders'
+SPIDER_MODULES = ['avito.spiders']
+NEWSPIDER_MODULE = 'avito.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = 'avito_rielt (+http://www.yourdomain.com)'
+#USER_AGENT = 'avito_parser (+http://www.yourdomain.com)'
 USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
+
+DOWNLOAD_DELAY = 0.5
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -48,13 +50,13 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 2
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 #SPIDER_MIDDLEWARES = {
-#    'avito_rielt.middlewares.AvitoRieltSpiderMiddleware': 543,
+#    'avito.middlewares.AvitoRieltSpiderMiddleware': 543,
 #}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'avito_rielt.middlewares.AvitoRieltDownloaderMiddleware': 543,
+#    'avito.middlewares.AvitoRieltDownloaderMiddleware': 543,
 #}
 
 # Enable or disable extensions
@@ -65,9 +67,9 @@ CONCURRENT_REQUESTS_PER_DOMAIN = 2
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'avito_rielt.pipelines.AviroRieltPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'avito.pipelines.AvitoPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

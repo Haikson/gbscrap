@@ -6,6 +6,8 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
 
-class AvitoRieltPipeline(object):
+class AvitoPipeline(object):
     def process_item(self, item, spider):
+        mongo_collection = MongoCollection(collection_name=type(item).__name__)
+        mongo_collection.insert(item)
         return item

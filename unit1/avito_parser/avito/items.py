@@ -16,4 +16,6 @@ class AvitoRieltItem(scrapy.Item):
     price = scrapy.Field()
     params = scrapy.Field()
     images = scrapy.Field()
-    phone = scrapy.Field()
+    date_parsed = scrapy.Field()
+    url = scrapy.Field()
+
