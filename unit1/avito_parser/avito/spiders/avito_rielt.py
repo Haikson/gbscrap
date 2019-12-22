@@ -17,7 +17,7 @@ class AvitoRieldSpider(scrapy.Spider):
         if self.num_pages is None:
             self.num_pages = int(response.xpath('//span[contains(@data-marker, "pagination-button/next")]/../span/text()').extract()[-2])
         else:
-            time.sleep(40)
+            time.sleep(2)
         while self.page_num < self.num_pages:
             apartment_links = []
             if 'blocked' in response.url:
@@ -30,10 +30,11 @@ class AvitoRieldSpider(scrapy.Spider):
             yield response.follow(next_page, callback=self.parse)
 
             for link in apartment_links:
+                time.sleep(3)
                 yield response.follow(url=link, callback=self.parse_apartment)
 
     def parse_apartment(self, response: HtmlResponse):
-        title = response.xpath('//span[contains(@class, "title-info-title-text")]/text()').extract()
+        title = response.xpath('//span[contains(@class, "title-info-title-text")]/text()').extract_first()
         price = int(response.xpath('//span[contains(@itemprop, "price")]/@content').extract_first())
         params_blocks = response.xpath('//li[contains(@class, "item-params-list-item")]')
         params = [
