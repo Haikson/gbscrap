@@ -21,7 +21,7 @@ class AvitoRieldSpider(scrapy.Spider):
         while self.page_num < self.num_pages:
             apartment_links = []
             if 'blocked' in response.url:
-                time.sleep(60)
+                time.sleep(5*60)
             else:
                 self.page_num += 1
                 apartment_links = response.xpath('//div[contains(@class, "item_table-wrapper")]//a[contains(@class, "snippet-link")]/@href').extract()
