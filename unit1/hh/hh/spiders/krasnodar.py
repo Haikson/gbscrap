@@ -59,7 +59,7 @@ class KrasnodarSpider(scrapy.Spider):
         @param response:
         @return:
         """
-        title = response.xpath('//h1[contains(@data-qa, "vacancy-title")]/text()').extract_first()
+        title = "".join(response.xpath('//h1[contains(@data-qa, "vacancy-title")]//text()').extract())
 
         salary_data = response.xpath('//script[@data-name="HH/GoogleDfpService"]/@ddata-params').extract_first()
         salary_data = json.loads(salary_data) if salary_data else {
