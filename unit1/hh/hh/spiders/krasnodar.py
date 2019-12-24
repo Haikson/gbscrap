@@ -25,3 +25,9 @@ class KrasnodarSpider(scrapy.Spider):
 
             # Parse page here
 
+    def get_vacancies(self, response):
+        pass
+
+    def parse_vacancy(self, response):
+        pass
+
