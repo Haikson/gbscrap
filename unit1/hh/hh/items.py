@@ -9,6 +9,13 @@ import scrapy
 
 
 class HhItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    _id = scrapy.Field()
+    title = scrapy.Field()
+    salary_from = scrapy.Field()
+    salary_to = scrapy.Field()
+    salary_cur = scrapy.Field()
+    url = scrapy.Field()
+    description = scrapy.Field()
+    company_url = scrapy.Field()
+    company_name = scrapy.Field()
+    skills = scrapy.Field()

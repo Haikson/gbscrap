@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
 import scrapy
+import json
+import lxml.html.clean as clean
 from scrapy.http import HtmlResponse
 from urllib.parse import urlencode
+
+from unit1.hh.hh.items import HhItem
 
 
 class KrasnodarSpider(scrapy.Spider):
@@ -16,6 +20,7 @@ class KrasnodarSpider(scrapy.Spider):
 
     name = 'krasnodar'
     allowed_domains = ['hh.ru']
+    base_url = "https://krasnodar.hh.ru"
     start_urls = [
         "https://krasnodar.hh.ru/search/vacancy?{}".format(
             urlencode({
@@ -29,7 +34,7 @@ class KrasnodarSpider(scrapy.Spider):
     def parse(self, response: HtmlResponse):
         next_page = response.xpath('//a[contains(@data-qa, "pager-next")]/@href').extract_first()
         if next_page:
-            yield from response.follow(next_page, callback=self.parse)
+            yield response.follow(next_page, callback=self.parse)
 
         # Parse page here
 
@@ -38,7 +43,7 @@ class KrasnodarSpider(scrapy.Spider):
             for link in response.xpath('//a[contains(@data-qa, "vacancy-serp__vacancy-title")]/@href').extract()
         ]
         for vacancy in vacancies:
-            yield from response.follow(vacancy, self.parse_vacancy)
+            yield response.follow(vacancy, callback=self.parse_vacancy)
 
     def parse_vacancy(self, response: HtmlResponse):
         """
@@ -54,18 +59,52 @@ class KrasnodarSpider(scrapy.Spider):
         @param response:
         @return:
         """
-        title = response.xpath('//h1[contains(@data-qa, "vacancy-title")]/span/text()').extract_first()
-        salary = response.xpath('//span[contains(@itemprop, "baseSalary")]/span[contains(@itemprop, "value")]/meta[contains(@itemprop, "minValue")]/@content')
-        if salary is None:
-            salary = response.xpath('//p[contains(@class, "vacancy-salary")]').extract_first()
-            salary = re.sub(r"[^\d]+", "", salary) if salary else None
-        if not salary or not title:
-            yield None
+        title = response.xpath('//h1[contains(@data-qa, "vacancy-title")]/text()').extract_first()
+
+        salary_data = response.xpath('//script[@data-name="HH/GoogleDfpService"]/@ddata-params').extract_first()
+        salary_data = json.loads(salary_data) if salary_data else {
+            "vac_type": "standard",
+            "vac_views": "607",
+            "vac_city": ".113.224.1438.53.",
+            "vac_metro": [],
+            "vac_employerid": "3941791",
+            "vac_salary_from": "350000",
+            "vac_salary_to": "650000",
+            "vac_salary_cur": "RUR",
+            "vac_profarea": ["1"],
+            "vac_specs": ["221"],
+            "vac_exp": "between3And6",
+            "vac_skills": [
+            ]
+        }
 
         url = response.url
-        description = "".join(response.xpath('//div[@class="vacancy-description"]/*').extract())
-        company_section = response.xpath('//a[@class="vacancy-company-name"]/')
-        company_url = company_section.xpath("./@href")
+        description = "".join(
+            self.clean_descriptions(response.xpath('//div[@class="vacancy-description"]/*'))
+        )
+        company_section = response.xpath('//a[@class="vacancy-company-name"]')
+        company_url = company_section.xpath("./@href").extract_first()
         company_name = "".join(company_section.xpath("./*/text()").extract())
+
+        yield HhItem(
+            title=title,
+            salary_from=salary_data.get("vac_salary_from"),
+            salary_to=salary_data.get("vac_salary_to"),
+            salary_cur=salary_data.get("vac_salary_cur"),
+            url=url,
+            description=description,
+            company_url="".join([self.base_url, company_url]),
+            company_name=company_name.strip(),
+            skills=salary_data.get("skills", [])
+        )
+
+    @staticmethod
+    def clean_descriptions(selectors):
+        selectors = selectors or []
+        safe_attrs = set(['src', 'alt', 'href', 'title', 'width', 'height'])
+        kill_tags = ['object', 'iframe']
+        cleaner = clean.Cleaner(safe_attrs_only=True, safe_attrs=safe_attrs, kill_tags=kill_tags)
+
+        return [cleaner.clean_html(selector.extract()).strip() for selector in selectors]
 
 
